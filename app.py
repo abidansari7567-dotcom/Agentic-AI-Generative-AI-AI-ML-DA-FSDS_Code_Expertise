@@ -1,19 +1,100 @@
 import streamlit as st
-import pickle
-import numpy as np
+from nltk.chat.util import Chat, reflections
 
-model = pickle.load(open(r'D:/data science/Machin learning/1. Regression/slr/linear_regression_model.pkl', 'rb'))
-st.title('Salary Prediction App')
+pairs = [
+    [
+        r"(.*)my name is (.*)",
+        ["Hello %2, How are you today ?"]
+    ],
+    [
+        r"(hi|hey|hello|hola|holla)(.*)",
+        ["Hello", "Hey there"]
+    ],
+    [
+        r"(.*)help(.*)",
+        ["I can help you"]
+    ],
+    [
+        r"(.*) your name ?",
+        ["My name is thecleverprogrammer, but you can just call me robot and I'm a chatbot."]
+    ],
+    [
+        r"how are you(.*)",
+        ["I'm doing very well", "I am great!"]
+    ],
+    [
+        r"sorry(.*)",
+        ["It's alright", "It's OK, never mind that"]
+    ],
+    [
+        r"i'm (.*) (good|well|okay|ok)",
+        ["Nice to hear that", "Alright, great!"]
+    ],
+    [
+        r"(.*)created(.*)",
+        ["Prakash created me using Python's NLTK library", "Top secret ;)"]
+    ],
+    [
+        r"(.*)(location|city)(.*)",
+        ["Hyderabad, India"]
+    ],
+    [
+        r"(.*)raining in (.*)",
+        ["No rain in the past 4 days here in %2", "In %2 there is a 50% chance of rain"]
+    ],
+    [
+        r"(.*)(sports|game|sport)(.*)",
+        ["I'm a very big fan of Cricket"]
+    ],
+    [
+        r"who (.*)(cricketer|batsman)",
+        ["Virat Kohli"]
+    ],
 
-st.write("This app predicts the salary based on years of experience using a simple linear regression model.")
+    # ✅ NLP RULE (FIXED)
+    [
+        r"(what is|explain|define)(.*)nlp(.*)",
+        ["NLP stands for Natural Language Processing. Natural Language Processing is a branch of artificial intelligence (AI) that focuses on enabling computers to understand, interpret, generate, and interact with human language (text and speech)"]
 
-years_experience = st.number_input("Enter Years of Experience:", min_value=0.0, max_value=50.0, value=1.0, step=0.5)
- 
-if st.button("Predict Salary"):
-    
-    experience_input = np.array([[years_experience]])
-    Prediction = model.predict(experience_input)
-    
-    st.success(f"The predicted salary for {years_experience} years of exprience is: ${Prediction[0]:,.2f}")
-    
-st.write("The model was trained using a dataset of salaries and years of exprience.")
+    ],
+
+    [
+        r"quit",
+        ["Bye for now. See you soon :)", "It was nice talking to you. See you soon :)"]
+    ],
+
+    # ✅ DEFAULT RULE — ALWAYS LAST
+    [
+        r"(.*)",
+        ["Our customer service will reach you"]
+    ],
+]
+
+chatbot = Chat(pairs, reflections)
+
+# Streamlit UI
+st.set_page_config(page_title="NLTK Chatbot", page_icon="🤖")
+st.title("🤖 NLTK Chatbot")
+st.write("Type lowercase English language. Type **quit** to exit.")
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
+
+user_input = st.chat_input("Say something...")
+
+if user_input:
+    user_input = user_input.lower()  # ✅ IMPORTANT
+
+    st.session_state.messages.append({"role": "user", "content": user_input})
+    with st.chat_message("user"):
+        st.markdown(user_input)
+
+    response = chatbot.respond(user_input)
+
+    st.session_state.messages.append({"role": "assistant", "content": response})
+    with st.chat_message("assistant"):
+        st.markdown(response)
